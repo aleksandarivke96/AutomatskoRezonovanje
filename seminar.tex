@@ -1,0 +1,193 @@
+% ============================================================
+%  Главна датотека — уноси поглавља из директоријума chapters/
+%  Компајлирање: pdflatex seminar.tex  (покренути два пута)
+% ============================================================
+\documentclass[12pt, a4paper]{article}
+
+% ---------- Пакети ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[serbianc]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titling}
+\usepackage{setspace}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{tikz}
+\usetikzlibrary{graphs, positioning}
+\usepackage{qcircuit}   % квантна кола (опционо, уклони ако није инсталирано)
+
+% ---------- Геометрија ----------
+\geometry{a4paper, top=3cm, bottom=3cm, left=3cm, right=3cm}
+
+% ---------- Проред ----------
+\setstretch{1.15}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{8pt}
+
+% ---------- Заглавље / подножје ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{Семинар катедре за рачунарство и информатику}}
+\fancyhead[R]{\small\textit{КР и НП-тешки проблеми}}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% ---------- Теоремска окружења ----------
+\newtheorem{theorem}{Теорема}[section]
+\newtheorem{lemma}[theorem]{Лема}
+\newtheorem{definition}[theorem]{Дефиниција}
+\newtheorem{example}[theorem]{Пример}
+\theoremstyle{remark}
+\newtheorem*{remark}{Напомена}
+
+% ---------- Hyperref боје ----------
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=black, urlcolor=blue!60!black}
+
+% ---------- Кутија са информацијама ----------
+\tcbset{
+  infostyle/.style={
+    colback=gray!8, colframe=gray!40,
+    boxrule=0.4pt, arc=2pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+    fonttitle=\bfseries\small
+  }
+}
+
+% ============================================================
+%  БАНЕР КОНФЕРЕНЦИЈЕ
+% ============================================================
+\newcommand{\conferencebanner}{%
+  \begin{tcolorbox}[infostyle, title=Информације]
+    \small
+    \textbf{Догађај:} Семинар катедре за рачунарство и информатику
+    \textbf{Датум:} 12. април 2026. \quad
+    \textbf{Место:} Математички факултет, Универзитет у Београду
+    \textbf{Тема:} Квантно рачунарство и примене
+  \end{tcolorbox}
+  \vspace{0.6cm}
+}
+
+% ============================================================
+%  НАСЛОВНА СТРАНА
+% ============================================================
+\title{%
+  {\large\scshape Семинар катедре за рачунарство}\\[8pt]
+  \rule{\linewidth}{1.2pt}\\[10pt]
+  {\LARGE\bfseries Квантно рачунарство и НП-тешки проблеми:\\[4pt]
+   \Large Од MaxCut проблема до аутоматског резоновања}\\[6pt]
+  \rule{\linewidth}{0.5pt}
+}
+
+\author{%
+  \textbf{Александар Ивановић}\thanks{Аутор за контакт.
+    Контакт: \texttt{aleksandar.ivke96@gmail.com}}\\
+  \small Катедра за рачунарство, Математички факултет\\
+  \small Универзитет у Београду\\[6pt]
+}
+
+\date{12. април 2026.}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+\maketitle
+\thispagestyle{fancy}
+\vspace{0.4cm}
+\conferencebanner
+
+% ============================================================
+%  САЖЕТАК
+% ============================================================
+\begin{abstract}
+\noindent
+Овај рад истражује потенцијал квантног рачунарства у решавању НП-тешких
+проблема, са акцентом на проблем MaxCut као репрезентативном примеру.
+Кроз призму класичног аутоматског резоновања и Z3 решавача, уводимо читаоца
+у ограничења класичних приступа, а затим показујемо како квантни алгоритми
+— посебно QAOA (Quantum Approximate Optimization Algorithm) — нуде нову
+парадигму за решавање ових проблема.
+Рад повезује формалне методе верификације са квантним рачунарством и указује
+на правце будућег истраживања.
+\end{abstract}
+
+\textbf{Кључне речи:} квантно рачунарство, НП-тешки проблеми, MaxCut,
+Z3 решавач, QAOA, аутоматско резоновање.
+
+\vspace{0.5em}
+\hrule
+\vspace{1.2em}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+%  ПОГЛАВЉА
+% ============================================================
+\input{chapters/01_uvod}
+\input{chapters/02_kvantne_paradigme}
+\input{chapters/03_maxcut}
+\input{chapters/04_z3}
+\input{chapters/05_kvantno_racunarstvo}
+\input{chapters/06_qaoa}
+\input{chapters/07_automatsko_rezovanje}
+\input{chapters/08_zakljucak}
+
+% ============================================================
+%  ЛИТЕРАТУРА
+% ============================================================
+\begin{thebibliography}{9}
+
+\bibitem{karp1972}
+R.~M. Karp.
+\newblock Reducibility among combinatorial problems.
+\newblock In \textit{Complexity of Computer Computations}, pages 85--103.
+  Plenum Press, 1972.
+
+\bibitem{goemans1995}
+M.~X. Goemans and D.~P. Williamson.
+\newblock Improved approximation algorithms for maximum cut and satisfiability
+  problems using semidefinite programming.
+\newblock \textit{Journal of the ACM}, 42(6):1115--1145, 1995.
+
+\bibitem{farhi2014}
+E.~Farhi, J.~Goldstone, and S.~Gutmann.
+\newblock A quantum approximate optimization algorithm.
+\newblock \textit{arXiv preprint arXiv:1411.4028}, 2014.
+
+\bibitem{monasson1999}
+R.~Monasson et~al.
+\newblock Determining computational complexity from characteristic `phase
+  transitions'.
+\newblock \textit{Nature}, 400:133--137, 1999.
+
+\bibitem{demoura2008}
+L.~de~Moura and N.~Bj{\o}rner.
+\newblock Z3: An efficient SMT solver.
+\newblock In \textit{TACAS 2008}, LNCS 4963, pages 337--340. Springer, 2008.
+
+\bibitem{preskill2018}
+J.~Preskill.
+\newblock Quantum computing in the NISQ era and beyond.
+\newblock \textit{Quantum}, 2:79, 2018.
+
+\bibitem{nielsen2010}
+M.~A. Nielsen and I.~L. Chuang.
+\newblock \textit{Quantum Computation and Quantum Information}.
+\newblock Cambridge University Press, 10th anniversary edition, 2010.
+
+\end{thebibliography}
+
+\end{document}
