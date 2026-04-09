@@ -23,6 +23,7 @@
 \usepackage{tcolorbox}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
+\usepackage{listings}
 \usepackage{tikz}
 \usetikzlibrary{graphs, positioning}
 \usepackage{qcircuit}   % квантна кола (опционо, уклони ако није инсталирано)
@@ -64,6 +65,29 @@
     fonttitle=\bfseries\small
   }
 }
+
+% ---------- Listings (Python) ----------
+\lstdefinestyle{python}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\itshape\color{gray!60},
+  stringstyle=\color{orange!80!black},
+  numberstyle=\tiny\color{gray},
+  numbers=left,
+  stepnumber=1,
+  numbersep=6pt,
+  backgroundcolor=\color{gray!6},
+  frame=single,
+  framerule=0.4pt,
+  rulecolor=\color{gray!40},
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=4,
+  captionpos=b,
+  morekeywords={True,False,None,as,from,import,with,yield,lambda,assert},
+}
+\lstset{style=python}
 
 % ============================================================
 %  БАНЕР КОНФЕРЕНЦИЈЕ
@@ -140,7 +164,7 @@ Z3 решавач, QAOA, аутоматско резоновање.
 \input{chapters/02_kvantne_paradigme}
 \input{chapters/03_maxcut}
 \input{chapters/04_z3}
-\input{chapters/05_kvantno_racunarstvo}
+\input{chapters/05_qubo}
 \input{chapters/06_qaoa}
 \input{chapters/07_automatsko_rezovanje}
 \input{chapters/08_zakljucak}
@@ -150,11 +174,43 @@ Z3 решавач, QAOA, аутоматско резоновање.
 % ============================================================
 \begin{thebibliography}{9}
 
+\bibitem{davis1960}
+M.~Davis and H.~Putnam.
+\newblock A computing procedure for quantification theory.
+\newblock \textit{Journal of the ACM}, 7(3):201--215, 1960.
+
+\bibitem{davis1962}
+M.~Davis, G.~Logemann, and D.~Loveland.
+\newblock A machine program for theorem-proving.
+\newblock \textit{Communications of the ACM}, 5(7):394--397, 1962.
+
+\bibitem{marques1999}
+J.~P. Marques-Silva and K.~A. Sakallah.
+\newblock {GRASP}: A search algorithm for propositional satisfiability.
+\newblock \textit{IEEE Transactions on Computers}, 48(5):506--521, 1999.
+
+\bibitem{cook1971}
+S.~A. Cook.
+\newblock The complexity of theorem-proving procedures.
+\newblock In \textit{Proceedings of the 3rd Annual ACM Symposium on Theory of
+  Computing (STOC)}, pages 151--158. ACM, 1971.
+
 \bibitem{karp1972}
 R.~M. Karp.
 \newblock Reducibility among combinatorial problems.
 \newblock In \textit{Complexity of Computer Computations}, pages 85--103.
   Plenum Press, 1972.
+
+\bibitem{erdos1960}
+P.~Erd{\H{o}}s and A.~R{\'e}nyi.
+\newblock On the evolution of random graphs.
+\newblock \textit{Publications of the Mathematical Institute of the Hungarian
+  Academy of Sciences}, 5:17--61, 1960.
+
+\bibitem{vazirani2001}
+V.~V. Vazirani.
+\newblock \textit{Approximation Algorithms}.
+\newblock Springer, 2001.
 
 \bibitem{goemans1995}
 M.~X. Goemans and D.~P. Williamson.
@@ -172,6 +228,19 @@ R.~Monasson et~al.
 \newblock Determining computational complexity from characteristic `phase
   transitions'.
 \newblock \textit{Nature}, 400:133--137, 1999.
+
+\bibitem{barrett2009}
+C.~Barrett, R.~Sebastiani, S.~A. Seshia, and C.~Tinelli.
+\newblock Satisfiability modulo theories.
+\newblock In A.~Biere et~al., editors, \textit{Handbook of Satisfiability},
+  volume 185 of \textit{Frontiers in Artificial Intelligence and Applications},
+  pages 825--885. IOS Press, 2009.
+
+\bibitem{bjorner2014}
+N.~Bj{\o}rner and M.~Phan.
+\newblock $\nu${Z} --- maximal satisfaction with {Z3}.
+\newblock In \textit{Proceedings of the International Symposium on
+  Artificial Intelligence and Mathematics (ISAIM)}, 2014.
 
 \bibitem{demoura2008}
 L.~de~Moura and N.~Bj{\o}rner.
