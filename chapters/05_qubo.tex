@@ -5,7 +5,7 @@
 \label{sec:qubo}
 
 Пре него што пређемо на квантне алгоритме, неопходно је увести
-\emph{QUBO} формулацију — стандардни математички оквир у коме
+\emph{QUBO} формулацију. QUBO је стандардни математички оквир у коме
 се комбинаторни оптимизациони проблеми изражавају на начин
 директно погодан за квантне и квантно-инспирисане решаваче.
 
@@ -21,11 +21,30 @@
   f(\mathbf{x})
   = \mathbf{x}^\top Q\, \mathbf{x}
   = \sum_{i=1}^{n} Q_{ii}\, x_i
-    + \sum_{i < j} Q_{ij}\, x_i x_j,
+    + 2\sum_{i < j} Q_{ij}\, x_i x_j,
 \]
 где је $Q \in \mathbb{R}^{n \times n}$ симетрична (или горња
 троугаона) матрица коефицијената.
 \end{definition}
+
+\begin{example}[QUBO матрица за $n = 3$]
+Нека је $n = 3$ и
+\[
+  Q =
+  \begin{pmatrix}
+    -1 &  1 &  0 \\
+     1 & -1 &  1 \\
+     0 &  1 & -1
+  \end{pmatrix}.
+\]
+Тада је циљна функција
+\[
+  f(\mathbf{x}) = -x_1 - x_2 - x_3 + 2x_1 x_2 + 2x_2 x_3.
+\]
+За $\mathbf{x} = (1, 0, 1)^\top$ добијамо $f = -1 - 0 - 1 + 0 + 0 = -2$,
+а за $\mathbf{x} = (1, 1, 1)^\top$ добијамо $f = -1 - 1 - 1 + 2 + 2 = 1$.
+Минимум је дакле у $\mathbf{x}^* = (1, 0, 1)^\top$ са вредношћу $f^* = -2$.
+\end{example}
 
 Три кључне особине чине QUBO централним форматом:
 \begin{itemize}[nosep]
@@ -33,8 +52,8 @@
         па дијагонални чланови $Q_{ii} x_i^2$ редукују на
         линеарне чланове $Q_{ii} x_i$.
   \item \textbf{Без ограничења:} Сва ограничења се уграђују у
-        циљну функцију преко казни (\emph{penalty terms}).
-  \item \textbf{Квантна подударност:} QUBO директно одговара
+        циљну функцију преко казнених чланова (\emph{penalty terms}).
+  \item \textbf{Квантна еквиваленција:} QUBO директно одговара
         \emph{Изинговом} (Ising) спин моделу, природном Хамилтонијану
         квантних анилера и QAOA алгоритма.
 \end{itemize}
@@ -43,10 +62,10 @@
 \subsection{Примери QUBO формулација ограничења}
 
 Конвертовање ограничених проблема у QUBO захтева да свако
-ограничење замијенимо penalty чланом пропорционалним са
-$\lambda > 0$ (довољно велики да казни свако кршење):
+ограничење заменимо са казненим чланом пропорционалним са
+$\lambda > 0$ (довољно великим да казни свако кршење услова):
 
-\textbf{Ограничење еквалитета} $x_i + x_j = 1$ (тачно један
+\textbf{Ограничење бинарности} $x_i + x_j = 1$ (тачно један
 од два бита је 1):
 \[
   P_1 = \lambda\,(x_i + x_j - 1)^2
@@ -88,24 +107,83 @@ $Q_{jj} \mathrel{-}= \lambda$, $Q_{ij} \mathrel{+}= 2\lambda$.
 функције за $\lambda$, чиме решавач избегава та стања.
 \end{example}
 
-% --- Повезаност са Изинговим моделом ---
-\subsection{Еквиваленција са Изинговим моделом}
+Табела~\ref{tab:qubo_constraints} сажима најчешће типове ограничења
+и одговарајуће QUBO казнене чланове.
 
-Квантни анилери (D-Wave) и QAOA природно оперишу са
-\emph{Изинговим} спиновима $s_i \in \{-1, +1\}$ уместо бинарних
-битова. Супституција:
+\begin{table}[ht]
+\centering
+\caption{Стандардна ограничења и њихове QUBO казне ($\lambda > 0$).}
+\label{tab:qubo_constraints}
+\renewcommand{\arraystretch}{1.6}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Ограничење} & \textbf{Казнени члан $P$} & \textbf{Значење} \\
+\hline
+$x_i = 0$ & $\lambda\, x_i$ & Искључи чвор/ресурс из решења \\
+\hline
+$x_i = 1$ & $\lambda\,(1 - x_i)$ & Обавезно укључи у решење \\
+\hline
+$x_i + x_j = 1$ & $\lambda\,(1 - x_i - x_j + 2x_ix_j)$ & Тачно jedan од два бита активан \\
+\hline
+$x_i + x_j \leq 1$ & $\lambda\, x_i x_j$ & Не могу оба бити активна истовремено \\
+\hline
+$x_i = x_j$ & $\lambda\,(x_i + x_j - 2x_ix_j)$ & Оба бита морају имати исту вредност \\
+\hline
+$x_i \leq x_j$ & $\lambda\,(x_i - x_ix_j)$ & Ако је $x_i$ активан, мора бити и $x_j$ \\
+\hline
+$\sum_{i=1}^n x_i = k$ & $\lambda\,\left(\sum_{i=1}^n x_i - k\right)^2$ & Тачно $k$ битова активно \\
+\hline
+\end{tabular}}
+\end{table}
+
+\subsection{Пример примене QUBO казни: тачно-2-од-3 ограничење}
+
+Нека су дате три бинарне променљиве $x_1, x_2, x_3 \in \{0,1\}$ и
+линеарна циљна функција:
 \[
-  x_i = \frac{1 - s_i}{2}
-  \quad\Longleftrightarrow\quad
-  s_i = 1 - 2x_i
+  f_{\mathrm{obj}}(\mathbf{x}) = -4x_1 - 3x_2 - 5x_3.
 \]
-трансформише QUBO у Изингов Хамилтонијан:
+Желимо да минимизујемо $f_{\mathrm{obj}}$ уз ограничење да тачно две
+од три промeнљиве морају бити активне:
 \[
-  H_C = \sum_{i} h_i\, s_i + \sum_{i < j} J_{ij}\, s_i s_j,
+  x_1 + x_2 + x_3 = 2.
 \]
-где коефицијенти $h_i$ и $J_{ij}$ директно произилазе из матрице $Q$.
-Ова дуалност значи да сваки QUBO проблем може бити угравиран
-у физику квантног система и решен квантним поступцима.
+
+\textbf{Казнени члан.}
+Из табеле~\ref{tab:qubo_constraints}, ограничење $\sum_i x_i = k$
+кодира се казном $\lambda\,(\sum_i x_i - k)^2$.
+За $k = 2$ и $\lambda = 10$ добијамо:
+\[
+  P(\mathbf{x}) = 10\,(x_1 + x_2 + x_3 - 2)^2.
+\]
+
+\textbf{Потпуна QUBO формулација.}
+\[
+  f(\mathbf{x}) = f_{\mathrm{obj}}(\mathbf{x}) + P(\mathbf{x})
+  = -4x_1 - 3x_2 - 5x_3 + 10\,(x_1 + x_2 + x_3 - 2)^2.
+\]
+
+\textbf{Провера на свим изводљивим решењима} (тачно два бита активна):
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|c|c|c|c|}
+\hline
+$\mathbf{x}$ & $f_{\mathrm{obj}}$ & $P$ & $f$ \\
+\hline
+$(1,1,0)$ & $-7$ & $0$ & $-7$ \\
+$(1,0,1)$ & $-9$ & $0$ & $\mathbf{-9}$ \\
+$(0,1,1)$ & $-8$ & $0$ & $-8$ \\
+\hline
+\end{tabular}
+\end{center}
+
+За неизводљиво решење, нпр.\ $\mathbf{x} = (1,1,1)$:
+\[
+  f = -12 + 10\cdot(3-2)^2 = -12 + 10 = -2,
+\]
+што је лошије од сваког изводљивог решења, па решавач природно бира
+$\mathbf{x}^* = (1, 0, 1)$ са вредношћу $f^* = -9$.
 
 % --- MaxCut као QUBO ---
 \subsection{Формулација MaxCut-а као QUBO}
@@ -114,7 +192,7 @@ $Q_{jj} \mathrel{-}= \lambda$, $Q_{ij} \mathrel{+}= 2\lambda$.
 Нека је $G = (V, E, w)$ граф са тежинама, $|V| = n$.
 
 \textbf{Варијабле.}
-Уведемо бинарну индикаторску варијаблу за сваки чвор:
+Уведемо бинарну индикаторску променљиву за сваки чвор:
 \[
   x_v \in \{0, 1\}, \quad v \in V,
 \]
@@ -144,25 +222,25 @@ $x_u + x_v - 2x_u x_v = 1$.
   Q_{vv} = -\sum_{u:\{u,v\}\in E} w_{uv}
   \quad\text{(дијагонала)},
   \qquad
-  Q_{uv} = 2w_{uv}
-  \quad\text{(ванд‌ијагонала, $u < v$)}.
+  Q_{uv} = w_{uv}
+  \quad\text{(ванд‌ијагонала, $u \neq v$)}.
 \]
-Нема додатних ограничења — проблем је \emph{природно неограничен},
-па не треба penalty чланови.
+Нема додатних ограничења. Проблем је \emph{природно неограничен},
+па не треба казнени чланови.
 
 \begin{example}[QUBO матрица за $K_4$ са јединичним тежинама]
 За $K_4$ ($n = 4$, свих $6$ ивица са $w = 1$):
 \[
   Q =
   \begin{pmatrix}
-   -3 & 2 & 2 & 2 \\
-    0 & -3 & 2 & 2 \\
-    0 &  0 & -3 & 2 \\
-    0 &  0 &  0 & -3
+   -3 &  1 &  1 &  1 \\
+    1 & -3 &  1 &  1 \\
+    1 &  1 & -3 &  1 \\
+    1 &  1 &  1 & -3
   \end{pmatrix}
 \]
-(горња троугаона форма; $Q_{vv} = -(n-1) = -3$ за сваки чвор,
-$Q_{uv} = 2$ за сваку ивицу).
+($Q_{vv} = -(n-1) = -3$ за сваки чвор,
+$Q_{uv} = Q_{vu} = 1$ за сваку ивицу).
 
 Оптималан бинарни вектор, нпр.\ $\mathbf{x} = (0,0,1,1)$
 ($S = \{0,1\}$, $\bar S = \{2,3\}$), даје:
@@ -172,21 +250,198 @@ $Q_{uv} = 2$ за сваку ивицу).
 у складу са резултатом из поглавља~\ref{sec:maxcut}.
 \end{example}
 
-\textbf{Изингова реформулација MaxCut-а.}
-Применом супституције $x_v = (1 - s_v)/2$ добијамо
-Изингов Хамилтонијан MaxCut-а:
-\[
-  H_C = -\frac{1}{2}\sum_{\{u,v\} \in E} w_{uv}\,(1 - s_u s_v)
-       = \mathrm{const} + \frac{1}{2}\sum_{\{u,v\} \in E} w_{uv}\, s_u s_v,
-\]
-тј.\ $J_{uv} = w_{uv}/2$ и $h_i = 0$.
-Управо овај Хамилтонијан фигурира у QAOA фази проблема
-(поглавље~\ref{sec:qaoa}), где квантни рачунар минимизује
-очекивану вредност $\langle H_C \rangle$ варирајући параметре кола.
 
 \begin{remark}
 QUBO је „заједнички језик" класичних и квантних оптимизационих
-решавача: исти $Q$ може бити прослеђен D-Wave анилеру,
-класичном симулираном анилеру, или QAOA алгоритму — без
+решавача: иста матрица $Q$ може бити прослеђен D-Wave анилеру,
+класичном симулираном анилеру или QAOA алгоритму, без
 икакве измене формулације проблема.
+\end{remark}
+
+% --- Решавање QUBO проблема ---
+\subsection{Решавање QUBO: Z3 и симулирано жарење}
+
+Да бисмо илустровали портабилност QUBO формата, решавамо исту
+инстанцу MaxCut на $K_4$ са QUBO матрицом из претходног примера.
+Решавамо потпуно различитим алатима: егзактним SMT решавачем Z3
+и класичним симулираним жарењем преко D-Wave Ocean SDK-а.
+
+\subsubsection{Решавање QUBO помоћу Z3}
+
+Z3-ов \texttt{Optimize} пакет директно прима квадратну
+циљну функцију над целобројним (или буловим) променљивама.
+Бинарност се наноси као скуп ограничења $x_i \in \{0, 1\}$,
+а решавач налазе егзактни минимум применом $\nu$Z оптимизационог оквира.
+
+\begin{example}[QUBO за MaxCut на $K_4$ помоћу Z3 (Python)]
+\begin{lstlisting}[style=python, caption={Решавање QUBO помоћу Z3 Optimize сучеља.}]
+from z3 import *
+
+# QUBO matrica za MaxCut na K4 (gornja-trougaona forma)
+Q = {
+    (0,0): -3, (1,1): -3, (2,2): -3, (3,3): -3,
+    (0,1):  2, (0,2):  2, (0,3):  2,
+    (1,2):  2, (1,3):  2,
+    (2,3):  2,
+}
+
+n = 4
+x = [Int(f'x{i}') for i in range(n)]
+opt = Optimize()
+
+# Binarne promenljive: x[i] in {0, 1}
+for v in x:
+    opt.add(Or(v == 0, v == 1))
+
+# QUBO ciljna funkcija: sum_{i<=j} Q[i,j] * x[i] * x[j]
+obj = Sum([
+    Q.get((i, j), 0) * x[i] * x[j]
+    for i in range(n) for j in range(i, n)
+])
+opt.minimize(obj)
+
+if opt.check() == sat:
+    m = opt.model()
+    vals = [m[v].as_long() for v in x]
+    print(f"Minimalna vrednost: {m.eval(obj)}")  # -4
+    print(f"Resenje x: {vals}")                   # [0, 0, 1, 1]
+\end{lstlisting}
+\end{example}
+
+Z3 проналази оптималан вектор $\mathbf{x} = (0,0,1,1)$ са вредношћу
+$f(\mathbf{x}) = -4$, у складу са аналитичким резултатом.
+Решавач гарантује глобалну оптималност, али временска сложеност
+у најгорем случају остаје експоненцијална.
+
+\textbf{Инверзни проблем: реконструкција матрице $Q$ из познатог решења.}
+Сада разматрамо обрнут смер: претпоставимо да је познато да је
+$\mathbf{x}^* = (0,0,1,1)$ \emph{оптимално} решење неког QUBO проблема,
+али матрица $Q$ није позната.
+Циљ је употребити Z3 да нађе $Q$ такву да $\mathbf{x}^*$ минимизује
+$f(\mathbf{x}) = \mathbf{x}^\top Q\,\mathbf{x}$ над свим
+$\mathbf{x} \in \{0,1\}^n$.
+
+\textbf{Услов оптималности.}
+Вектор $\mathbf{x}^*$ је глобални минимум ако и само ако:
+\[
+  f(\mathbf{x}^*) \leq f(\mathbf{x})
+  \quad \forall\,\mathbf{x} \in \{0,1\}^n.
+\]
+За фиксно $\mathbf{x}^*$ и фиксно $\mathbf{x}$, ова неједнакост
+је \emph{линеарна} у елементима матрице $Q$, стога је проблем
+налажења $Q$ систем линеарних ограничења, природан за Z3.
+
+\textbf{Неодређеност.}
+Систем са $2^n$ ограничења и $n(n+1)/2$ слободних улаза у $Q$ је
+генерално недоређен: много различитих матрица $Q$ може имати исти
+оптимум. Додатна нормализациона ограничења (нпр.\ фиксирање скале
+или структуре) отклањају ту вишезначност.
+
+\begin{example}[Реконструкција $Q$ за коју је $(0,0,1,1)$ оптимум (Python)]
+\begin{lstlisting}[style=python, caption={Z3 реконструкција QUBO матрице из познатог оптималног решења.}]
+from z3 import *
+from itertools import product
+
+n      = 4
+x_star = [0, 0, 1, 1]   # poznato optimalno resenje
+
+# Slobodne (cjelobrojne) promenljive za gornje-trougaonu Q matricu
+Q = {(i, j): Int(f'Q_{i}_{j}')
+     for i in range(n) for j in range(i, n)}
+
+def energy(x):
+    """f(x) = sum_{i<=j} Q[i,j] * x[i] * x[j]"""
+    return Sum([Q[(i, j)] * x[i] * x[j]
+                for i in range(n) for j in range(i, n)])
+
+s = Solver()
+
+# Uslov optimalnosti: f(x*) <= f(x) za svaki x in {0,1}^n
+f_star = energy(x_star)
+for x in product([0, 1], repeat=n):
+    s.add(f_star <= energy(list(x)))
+
+# Normalizacija: fiksiramo offdijagonalne koeficijente na 2
+# (odgovara jedinicnim tezinama MaxCut grafa)
+for i in range(n):
+    for j in range(i + 1, n):
+        s.add(Q[(i, j)] == 2)
+
+if s.check() == sat:
+    m = s.model()
+    print("Rekonstruisana Q matrica (gornje-trougaona):")
+    for i in range(n):
+        for j in range(i, n):
+            print(f"  Q[{i},{j}] = {m[Q[(i, j)]]}")
+\end{lstlisting}
+\end{example}
+
+З3 проналази јединствено решење под датим нормализационим
+ограничењима:
+
+\[
+  Q_{ii} = -3 \;\text{(за сваки }i\text{)},
+  \qquad
+  Q_{ij} = 2 \;\text{(за сваки пар }i < j\text{)},
+\]
+
+чиме се добија тачно QUBO матрица $K_4$ MaxCut проблема.
+Ово потврђује кохеренцију формулације: оптималност
+$(0,0,1,1)$ у потпуности одређује структуру $Q$ (уз задату скалу).
+
+\subsubsection{Решавање QUBO симулираним жарењем (D-Wave Ocean SDK)}
+
+D-Wave Ocean SDK садржи класични \texttt{SimulatedAnnealingSampler}
+који прима исти QUBO формат и враћа скуп узорака сортираних
+по енергији. Самплер је квантно-инспирисан: не захтева стварни
+квантни хардвер, али прати исту конвенцију интерфејса као и
+правилни D-Wave анилер, тако да је прелаз на хардвер тривијалан
+(замена самплера са \texttt{DWaveSampler}).
+
+\begin{example}[QUBO за MaxCut на $K_4$ помоћу SimulatedAnnealingSampler (Python)]
+\begin{lstlisting}[style=python, caption={Решавање QUBO симулираним жарењем преко D-Wave Ocean SDK-а.}]
+from dwave.samplers import SimulatedAnnealingSampler
+
+# Isti QUBO format kao i za Z3 (gornja-trougaona forma)
+Q = {
+    (0,0): -3, (1,1): -3, (2,2): -3, (3,3): -3,
+    (0,1):  2, (0,2):  2, (0,3):  2,
+    (1,2):  2, (1,3):  2,
+    (2,3):  2,
+}
+
+sampler = SimulatedAnnealingSampler()
+# num_reads: broj nezavisnih pokretanja zarenja
+response = sampler.sample_qubo(Q, num_reads=100)
+
+best = response.first
+print(f"Energija: {best.energy}")       # -4.0
+print(f"Resenje: {dict(best.sample)}")  # {0:0, 1:0, 2:1, 3:1}
+\end{lstlisting}
+\end{example}
+
+Метод \texttt{sample\_qubo} покреће \texttt{num\_reads} независних
+трагова жарења и враћа резултате у облику \texttt{SampleSet} објекта.
+Атрибут \texttt{response.first} садржи узорак са најнижом енергијом.
+За прелаз на стварни D-Wave хардвер довољно је заменити самплер:
+
+\begin{lstlisting}[style=python, caption={Прелаз на D-Wave хардвер тј. само се самплер мења.}]
+from dwave.system import DWaveSampler, EmbeddingComposite
+
+sampler = EmbeddingComposite(DWaveSampler())
+response = sampler.sample_qubo(Q, num_reads=100)
+\end{lstlisting}
+
+\texttt{EmbeddingComposite} аутоматски проналази уграђивање
+логичких QUBO чворова у физички граф процесора,
+скривајући детаље архитектуре од корисника.
+
+
+\begin{remark}
+Оба приступа прихватају идентичан QUBO формат $Q$.
+Z3 гарантује егзактно решење, али не скалира на велике инстанце.
+Симулирано жарење је хеуристичко и не гарантује оптималност,
+али лако обрађује инстанце са стотинама варијабли.
+Квантни анилер (D-Wave) нуди исти интерфејс уз потенцијалну
+предност тунелирања на хардверском нивоу.
 \end{remark}

@@ -70,9 +70,9 @@
 % ---------- Listings (Python) ----------
 \lstdefinestyle{python}{
   language=Python,
-  basicstyle=\ttfamily\small,
+  basicstyle=\ttfamily\upshape\small,
   keywordstyle=\bfseries\color{blue!70!black},
-  commentstyle=\itshape\color{gray!60},
+  commentstyle=\color{gray!60},
   stringstyle=\color{orange!80!black},
   numberstyle=\tiny\color{gray},
   numbers=left,
@@ -86,9 +86,13 @@
   showstringspaces=false,
   tabsize=4,
   captionpos=b,
+  aboveskip=1.2em,
+  belowskip=1.2em,
   morekeywords={True,False,None,as,from,import,with,yield,lambda,assert},
 }
 \lstset{style=python}
+\renewcommand{\lstlistingname}{Листинг}
+\renewcommand{\lstlistlistingname}{Списак листинга}
 
 % ============================================================
 %  БАНЕР КОНФЕРЕНЦИЈЕ
@@ -138,18 +142,21 @@
 % ============================================================
 \begin{abstract}
 \noindent
-Овај рад истражује потенцијал квантног рачунарства у решавању НП-тешких
-проблема, са акцентом на проблем MaxCut као репрезентативном примеру.
-Кроз призму класичног аутоматског резоновања и Z3 решавача, уводимо читаоца
-у ограничења класичних приступа, а затим показујемо како квантни алгоритми
-— посебно QAOA (Quantum Approximate Optimization Algorithm) — нуде нову
-парадигму за решавање ових проблема.
-Рад повезује формалне методе верификације са квантним рачунарством и указује
-на правце будућег истраживања.
+Овај рад разматра везу између аутоматског резоновања, QUBO моделирања
+и квантне оптимизације на примеру проблема MaxCut. Најпре је приказано
+како се MaxCut формулише у оквиру SMT решавача Z3, који у овом контексту
+служи и као егзактан решавач за мање инстанце и као основа за формалну
+проверу исправности модела. Затим је анализирана QUBO формулација као
+заједнички језик који повезује ограничења, класичне хеуристике и квантне
+оптимизационе алгоритме као што је QAOA. Посебна пажња посвећена је томе
+како Z3 може да проверава семантику казнених чланова, избор коефицијената
+казне и исправност кандидатских решења добијених оптимизацијом. Тиме ћемо
+показати нове потенцијалне правце истраживања на пресеку формалних метода и
+квантних алгоритама.
 \end{abstract}
 
-\textbf{Кључне речи:} квантно рачунарство, НП-тешки проблеми, MaxCut,
-Z3 решавач, QAOA, аутоматско резоновање.
+\textbf{Кључне речи:} MaxCut, Z3, SMT, QUBO, QAOA,\\
+аутоматско резоновање, квантна оптимизација.
 
 \vspace{0.5em}
 \hrule
@@ -224,6 +231,17 @@ E.~Farhi, J.~Goldstone, and S.~Gutmann.
 \newblock A quantum approximate optimization algorithm.
 \newblock \textit{arXiv preprint arXiv:1411.4028}, 2014.
 
+\bibitem{farhi2000}
+E.~Farhi, J.~Goldstone, S.~Gutmann, and M.~Sipser.
+\newblock Quantum computation by adiabatic evolution.
+\newblock \textit{arXiv preprint quant-ph/0001106}, 2000.
+
+\bibitem{grover1997}
+L.~K. Grover.
+\newblock Quantum mechanics helps in searching for a needle in a haystack.
+\newblock \textit{Physical Review Letters}, 79(2):325--328, 1997.
+\newblock doi:10.1103/PhysRevLett.79.325.
+
 \bibitem{monasson1999}
 R.~Monasson et~al.
 \newblock Determining computational complexity from characteristic `phase
@@ -248,15 +266,57 @@ L.~de~Moura and N.~Bj{\o}rner.
 \newblock Z3: An efficient SMT solver.
 \newblock In \textit{TACAS 2008}, LNCS 4963, pages 337--340. Springer, 2008.
 
+\bibitem{bennett1997}
+C.~H. Bennett, E.~Bernstein, G.~Brassard, and U.~Vazirani.
+\newblock Strengths and weaknesses of quantum computing.
+\newblock \textit{SIAM Journal on Computing}, 26(5):1510--1523, 1997.
+\newblock doi:10.1137/S0097539796300933.
+
+\bibitem{lucas2014}
+A.~Lucas.
+\newblock Ising formulations of many {NP} problems.
+\newblock \textit{Frontiers in Physics}, 2:5, 2014.
+\newblock doi:10.3389/fphy.2014.00005.
+
+\bibitem{glover2022qubo}
+F.~Glover, G.~Kochenberger, R.~Hennig, and Y.~Du.
+\newblock Quantum bridge analytics {I}: a tutorial on formulating and using
+  {QUBO} models.
+\newblock \textit{Annals of Operations Research}, 314(1):141--183, 2022.
+\newblock doi:10.1007/s10479-022-04634-2.
+
+\bibitem{kadowaki1998}
+T.~Kadowaki and H.~Nishimori.
+\newblock Quantum annealing in the transverse {I}sing model.
+\newblock \textit{Physical Review E}, 58(5):5355--5363, 1998.
+\newblock doi:10.1103/PhysRevE.58.5355.
+
 \bibitem{preskill2018}
 J.~Preskill.
 \newblock Quantum computing in the NISQ era and beyond.
 \newblock \textit{Quantum}, 2:79, 2018.
 
+\bibitem{temme2017}
+K.~Temme, S.~Bravyi, and J.~M. Gambetta.
+\newblock Error mitigation for short-depth quantum circuits.
+\newblock \textit{Physical Review Letters}, 119(18):180509, 2017.
+\newblock doi:10.1103/PhysRevLett.119.180509.
+
+\bibitem{wecker2015}
+D.~Wecker, M.~B. Hastings, and M.~Troyer.
+\newblock Progress towards practical quantum variational algorithms.
+\newblock \textit{Physical Review A}, 92(4):042303, 2015.
+\newblock doi:10.1103/PhysRevA.92.042303.
+
 \bibitem{nielsen2010}
 M.~A. Nielsen and I.~L. Chuang.
 \newblock \textit{Quantum Computation and Quantum Information}.
 \newblock Cambridge University Press, 10th anniversary edition, 2010.
+
+\bibitem{biere2009}
+A.~Biere, M.~Heule, H.~van Maaren, and T.~Walsh, editors.
+\newblock \textit{Handbook of Satisfiability}.
+\newblock IOS Press, 2009.
 
 \end{thebibliography}
 
