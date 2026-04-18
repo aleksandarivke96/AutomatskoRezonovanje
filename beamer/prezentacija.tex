@@ -1,0 +1,655 @@
+% ============================================================
+%  Beamer презентација — Квантно рачунарство и НП-тешки проблеми
+%  Компајлирање: pdflatex prezentacija.tex  (два пута)
+% ============================================================
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{whale}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[serbianc]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+
+% ---- Python listings ----
+\lstdefinestyle{pysmall}{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange!80!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=4pt,
+  backgroundcolor=\color{gray!7},
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{gray!40},
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=4,
+  morekeywords={True,False,None,as,from,import,with},
+}
+
+% ---- Боје ----
+\definecolor{qubocolor}{RGB}{200,100,20}
+\definecolor{quantumcolor}{RGB}{30,80,160}
+\definecolor{verifycolor}{RGB}{20,130,60}
+
+% ---- Метаподаци ----
+\title[Квантно рачунарство и НП-тешки проблеми]{%
+  Квантно рачунарство и НП-тешки проблеми:\\
+  \small Од MaxCut проблема до аутоматског резоновања}
+\author[А. Ивановић]{Александар Ивановић\\
+  \small Senior Software Engineer, Levi9\\
+  \small Катедра за рачунарство, Математички факултет}
+\institute[МФ, Универзитет у Београду]{Математички факултет, Универзитет у Београду}
+\date{12. април 2026.}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% ---- Насловна ----
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% ---- Садржај ----
+\begin{frame}{Садржај}
+  \tableofcontents
+\end{frame}
+
+% ============================================================
+\section{Увод}
+% ============================================================
+
+\begin{frame}{Мотивација}
+  \begin{block}{Проблем}
+    Класа НП-тешких проблема: лако верификовати решење,\\
+    тешко пронаћи — укључује логистику, криптографију, ML, верификацију.
+  \end{block}
+
+  \bigskip
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+      \textbf{Класичан приступ}
+      \begin{itemize}
+        \item SAT / SMT решавачи (Z3)
+        \item Егзактни, али спори за велике улазе
+        \item Природни формализам за ограничења
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{Квантни приступ}
+      \begin{itemize}
+        \item Суперпозиција и тунеловање
+        \item QUBO као заједнички формат
+        \item Квантно жарење и QAOA
+      \end{itemize}
+  \end{columns}
+
+  \bigskip
+  \begin{alertblock}{Главна теза рада}
+    Аутоматско резоновање (Z3) и квантна оптимизација (QUBO/QAOA)
+    нису конкурентни, већ \textbf{комплементарни} алати.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Водећи пример: MaxCut}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \textbf{Проблем MaxCut}\\[4pt]
+      Дат граф $G=(V,E,w)$ — наћи партицију $V = S \cup \bar{S}$
+      која максимизује тежину пресечених ивица:
+      \[
+        \mathrm{cut}(S,\bar{S}) = \sum_{\substack{\{u,v\}\in E\\ u\in S,\, v\in\bar{S}}} w(u,v)
+      \]
+      \medskip
+      \begin{itemize}
+        \item НП-потпун (Карп, 1972)
+        \item Гоеманс–Вилијамсон: $\approx 0{,}878\cdot\mathrm{OPT}$
+        \item Природна QUBO / Изингова формулација
+      \end{itemize}
+    \column{0.42\textwidth}
+      \centering
+      \begin{tikzpicture}[scale=0.85,
+        nd/.style={circle,draw,thick,minimum size=7mm,font=\small},
+        cut edge/.style={dashed,thick,red!70!black},
+        inner edge/.style={thick,gray!60}]
+        \node[nd] (1) at (0, 1.4)  {$1$};
+        \node[nd] (2) at (0,-1.4)  {$2$};
+        \node[nd] (3) at (2.8, 1.4){$3$};
+        \node[nd] (4) at (2.8,-1.4){$4$};
+        \draw[inner edge] (1)--(2);
+        \draw[inner edge] (3)--(4);
+        \draw[cut edge]   (1)--(3);
+        \draw[cut edge]   (1)--(4);
+        \draw[cut edge]   (2)--(3);
+        \draw[cut edge]   (2)--(4);
+        \draw[blue!50,thick,rounded corners=8pt,dashed]
+              (-0.6,-2) rectangle (0.6,2);
+        \draw[orange!70,thick,rounded corners=8pt,dashed]
+              (2.2,-2) rectangle (3.4,2);
+        \node[draw=none,text=blue!70,font=\small\itshape] at (0,-2.4) {$S$};
+        \node[draw=none,text=orange!80!black,font=\small\itshape] at (2.8,-2.4) {$\bar{S}$};
+      \end{tikzpicture}\\[4pt]
+      \small $\mathrm{OPT}(K_4)=4$,\ испрекидано = рез
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\section{Квантне парадигме}
+% ============================================================
+
+\begin{frame}{Кубити и суперпозиција}
+  \begin{block}{Стање квантног регистра ($n$ кубита)}
+    \[
+      |\psi\rangle = \sum_{x \in \{0,1\}^n} \alpha_x |x\rangle,
+      \qquad \sum_x |\alpha_x|^2 = 1
+    \]
+    Мерење враћа $|x\rangle$ са вероватноћом $|\alpha_x|^2$.
+  \end{block}
+
+  \bigskip
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \textbf{Парадигма I: Квантна кола}
+      \[
+        |\psi_{\text{out}}\rangle = U_L \cdots U_1 |0\rangle^{\otimes n}
+      \]
+      \begin{itemize}\small
+        \item Универзални модел рачунара
+        \item NISQ ера: шум, декохеренција
+        \item QAOA — плитка хибридна кола
+      \end{itemize}
+    \column{0.48\textwidth}
+      \textbf{Парадигма II: Квантно жарење}
+      \[
+        \hat{H}(s) = (1-s)\hat{H}_0 + s\,\hat{H}_P
+      \]
+      \begin{itemize}\small
+        \item Специјализовано за оптимизацију
+        \item Адијабатска теорема
+        \item D-Wave — директни QUBO улаз
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Поређење парадигми}
+  \begin{table}
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{lll}
+      \toprule
+      \textbf{Особина} & \textbf{Кола (Gate-Based)} & \textbf{Жарење (Annealing)} \\
+      \midrule
+      Рачунски модел   & Унитарна кола              & Адијабатска еволуција \\
+      Улаз             & Квантни програм            & QUBO / Изингов модел \\
+      Намена           & Универзално рачунање       & Комбинаторна оптимизација \\
+      Излаз            & Мерења након кола          & Стање ниске енергије \\
+      Веза са QUBO     & QAOA                       & D-Wave / анилерски модел \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+
+  \bigskip
+  \begin{block}{Кључна разлика}
+    Кола = универзални рачунар; жарење = специјализован оптимизатор.\\
+    Оба користе \textbf{исти QUBO/Изингов опис} проблема.
+  \end{block}
+\end{frame}
+
+% ============================================================
+\section{Класе сложености и MaxCut}
+% ============================================================
+
+\begin{frame}{Класе сложености}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{\textsf{P}}
+        Проблеми решиви детерминистичком Туринговом машином у \emph{полиномском} времену.
+      \end{block}
+      \medskip
+      \begin{block}{\textsf{NP}}
+        Проблеми са полиномским \emph{верификатором} — решење се проверава у полиному.
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{НП-тешки}
+        Сваки NP-проблем полиномски се редукује на $\Pi$.\\
+        \medskip
+        $\forall L \in \textsf{NP}:\ L \leq_p \Pi$
+      \end{block}
+      \medskip
+      \begin{block}{НП-потпуни}
+        $\Pi \in \textsf{NP}$ \emph{и} $\Pi$ НП-тежак.\\
+        „Најтежи" у \textsf{NP}.
+      \end{block}
+  \end{columns}
+
+  \bigskip
+  \begin{alertblock}{MaxCut је НП-потпун (Карп, 1972)}
+    Под $\textsf{P} \neq \textsf{NP}$ нема полиномског егзактног алгоритма.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Апроксимациона сложеност MaxCut-а}
+  \begin{itemize}
+    \item \textbf{Тривијалан рандомизован алгоритам:} $\alpha = 1/2$\\
+          (сваки чвор независно у $S$ или $\bar S$)
+    \bigskip
+    \item \textbf{Гоеманс–Вилијамсон (1995):} SDP + хиперравна рандомизација
+          \[
+            \mathrm{cut}_{\mathrm{alg}} \geq \alpha_{\mathrm{GW}} \cdot \mathrm{OPT},
+            \quad \alpha_{\mathrm{GW}} \approx 0{,}878
+          \]
+    \bigskip
+    \item \textbf{Хипотеза јединствених игара (Khot, 2002):}\\
+          $\alpha_{\mathrm{GW}}$ је \emph{оптималан} полиномски достижан апроксимациони фактор
+  \end{itemize}
+
+  \begin{block}{Мотивација за квантне приступе}
+    Ако је $0{,}878$ горња граница за класичне алгоритме, квантни приступи
+    (QUBO жарење, QAOA) могу потенцијално прећи ту границу.
+  \end{block}
+\end{frame}
+
+% ============================================================
+\section{Z3 и SMT}
+% ============================================================
+
+\begin{frame}[fragile]{SMT решавачи и Z3}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{SAT → SMT хијерархија}
+      \begin{itemize}\small
+        \item \textbf{SAT:} НП-потпун; CDCL+VSIDS у пракси решава $10^6$ клауза
+        \item \textbf{SMT:} SAT + теорије (аритметика, низови, битвектори…)
+        \item \textbf{Z3:} Microsoft Research\\
+              de Moura \& Bjørner (2008)\\
+              $\nu$Z: оптимизациони оквир
+      \end{itemize}
+      \bigskip
+      \textbf{Могућности Z3}
+      \begin{itemize}\small
+        \item Провера задовољивости
+        \item Налажење минимума/максимума (\texttt{Optimize})
+        \item Верификација ограничења
+      \end{itemize}
+    \column{0.45\textwidth}
+      \begin{exampleblock}{MaxCut на $K_4$ у Z3}
+        \begin{lstlisting}[style=pysmall]
+from z3 import *
+x = [Int(f'x{i}') for i in range(4)]
+opt = Optimize()
+for v in x:
+    opt.add(Or(v==0, v==1))
+edges = [(0,1),(0,2),(0,3),
+         (1,2),(1,3),(2,3)]
+cut = Sum([If(x[u]!=x[v],1,0)
+           for u,v in edges])
+h = opt.maximize(cut)
+opt.check()
+# Optimum: 4
+        \end{lstlisting}
+      \end{exampleblock}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Ограничења Z3 за велике инстанце}
+  \begin{block}{Теоријска баријера}
+    НП-тешкоћа MaxCut-а гарантује \emph{експоненцијалан} раст у најгорем случају.\\
+    CDCL претрага постаје непрактична за $n \gg 50$.
+  \end{block}
+
+  \bigskip
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \textbf{Предности Z3}
+      \begin{itemize}
+        \item Егзактан (гарантована оптималност)
+        \item Богат формализам ограничења
+        \item Природан верификатор
+      \end{itemize}
+    \column{0.48\textwidth}
+      \textbf{Недостаци Z3}
+      \begin{itemize}
+        \item Не скалира на велике инстанце
+        \item Не решава директно QUBO формат
+        \item Нема приступ квантном хардверу
+      \end{itemize}
+  \end{columns}
+
+  \bigskip
+  \begin{alertblock}{Улога Z3 у овом раду}
+    Z3 је \textbf{референтни алат} и \textbf{верификатор}, не примарни оптимизатор.
+  \end{alertblock}
+\end{frame}
+
+% ============================================================
+\section{QUBO формулација}
+% ============================================================
+
+\begin{frame}{QUBO: Дефиниција}
+  \begin{definition}[QUBO]
+    Наћи $\mathbf{x} \in \{0,1\}^n$ које минимизује:
+    \[
+      f(\mathbf{x}) = \mathbf{x}^\top Q\, \mathbf{x}
+        = \sum_{i} Q_{ii} x_i + 2\sum_{i<j} Q_{ij} x_i x_j
+    \]
+    где је $Q \in \mathbb{R}^{n\times n}$ симетрична матрица.
+  \end{definition}
+
+  \bigskip
+  \begin{columns}[T]
+    \column{0.32\textwidth}
+      \textbf{Бинарност}\\
+      $x_i^2 = x_i$,\\
+      дијагонала даје линеарне чланове
+    \column{0.32\textwidth}
+      \textbf{Без ограничења}\\
+      Сва ограничења уграђена преко казнених чланова
+    \column{0.32\textwidth}
+      \textbf{Квантна еквиваленција}\\
+      QUBO $\leftrightarrow$ Изингов модел $\leftrightarrow$ QAOA / D-Wave
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Казнени чланови у QUBO}
+  Свако ограничење кодира се казном $P(\mathbf{x}) \geq 0$,
+  нула само ако ограничење \emph{важи}:
+  \[
+    f_{\mathrm{QUBO}}(\mathbf{x}) = f(\mathbf{x}) + \sum_j \lambda_j P_j(\mathbf{x})
+  \]
+
+  \medskip
+  \begin{table}
+    \renewcommand{\arraystretch}{1.35}
+    \small
+    \begin{tabular}{|l|l|}
+      \hline
+      \textbf{Ограничење} & \textbf{Казнени члан $P$} \\
+      \hline
+      $x_i + x_j = 1$ & $\lambda(1 - x_i - x_j + 2x_ix_j)$ \\
+      $x_i + x_j \leq 1$ & $\lambda\, x_i x_j$ \\
+      $x_i = x_j$ & $\lambda(x_i + x_j - 2x_ix_j)$ \\
+      $\sum_{i=1}^n x_i = k$ & $\lambda\!\left(\sum_i x_i - k\right)^2$ \\
+      \hline
+    \end{tabular}
+  \end{table}
+
+  \begin{block}{Аналогија са Лагранжевим множитељима}
+    Исти принцип — само прилагођен бинарном дискретном домену,
+    а $\lambda_j$ се бира \emph{унапред}, не оптимизује.
+  \end{block}
+\end{frame}
+
+\begin{frame}{MaxCut као QUBO}
+  \textbf{Бинарне варијабле:} $x_v \in \{0,1\}$, $v\in V$
+  \quad ($x_v=0 \Rightarrow v\in S$, $x_v=1 \Rightarrow v\in\bar S$)
+
+  \medskip
+  Ивица $\{u,v\}$ прелази рез $\iff$ $x_u \neq x_v$
+  $\iff$ $x_u + x_v - 2x_ux_v = 1$
+
+  \medskip
+  \textbf{Минимизацијска QUBO форма:}
+  \[
+    \boxed{
+      f_{\mathrm{MaxCut}}(\mathbf{x})
+      = -\!\sum_{\{u,v\}\in E} w_{uv}(x_u + x_v - 2x_ux_v)
+    }
+  \]
+
+  \textbf{Елементи матрице $Q$:}
+  \[
+    Q_{vv} = -\!\sum_{u:\{u,v\}\in E} w_{uv}, \qquad
+    Q_{uv} = w_{uv} \quad (u\neq v)
+  \]
+
+  \begin{exampleblock}{$K_4$ са јединичним тежинама}
+    $Q_{vv} = -3$, $Q_{uv} = 1$ за све ивице.
+    Оптимум: $\mathbf{x}^* = (0,0,1,1)$, $f^* = -4 = -\mathrm{OPT}(K_4)$
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{Решавање QUBO: Z3 vs.\ симулирано жарење}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \textbf{Z3 (егзактно)}
+      \begin{lstlisting}[style=pysmall]
+from z3 import *
+Q = {(0,0):-3,(1,1):-3,
+     (2,2):-3,(3,3):-3,
+     (0,1):1,(0,2):1,(0,3):1,
+     (1,2):1,(1,3):1,(2,3):1, ...}
+x = [Int(f'x{i}') for i in range(4)]
+opt = Optimize()
+for v in x:
+    opt.add(Or(v==0, v==1))
+obj = Sum([Q.get((i,j),0)*x[i]*x[j]
+           for i in range(4)
+           for j in range(4)])
+opt.minimize(obj)
+# Energija: -4,  x: [0,0,1,1]
+      \end{lstlisting}
+    \column{0.48\textwidth}
+      \textbf{D-Wave Ocean SDK (хеуристично)}
+      \begin{lstlisting}[style=pysmall]
+from dwave.samplers import \
+    SimulatedAnnealingSampler
+Q = {(0,0):-3,(0,1):1,...}
+sampler = SimulatedAnnealingSampler()
+response = sampler.sample_qubo(
+    Q, num_reads=100)
+best = response.first
+# Energija: -4.0
+# Resenje: {0:0,1:0,2:1,3:1}
+
+# Prelaz na D-Wave hardver:
+# sampler = EmbeddingComposite(
+#               DWaveSampler())
+      \end{lstlisting}
+  \end{columns}
+
+  \medskip
+  \small Исти $Q$ — три различита решавача: Z3, симулирано жарење, D-Wave.
+\end{frame}
+
+% ============================================================
+\section{QAOA}
+% ============================================================
+
+\begin{frame}{QAOA: Квантни апроксимациони оптимизациони алгоритам}
+  \begin{block}{Farhi, Goldstone, Gutmann (2014)}
+    Хибридни квантно-класични алгоритам за комбинаторну оптимизацију.
+  \end{block}
+
+  \medskip
+  \textbf{QUBO $\to$ Изинг $\to$ QAOA:}
+  \[
+    x_i = \tfrac{1-s_i}{2} \quad\Rightarrow\quad
+    \hat{H}_P = \sum_i h_i \hat{Z}_i + \sum_{i<j} J_{ij}\hat{Z}_i\hat{Z}_j
+  \]
+
+  \medskip
+  \textbf{Проблемски Хамилтонијан за MaxCut:}
+  \[
+    \hat{H}_C = \tfrac{1}{2}\sum_{\{u,v\}\in E}\bigl(\hat{I} - \hat{Z}_u\hat{Z}_v\bigr)
+  \]
+
+  \begin{columns}[T]
+    \column{0.32\textwidth}
+      \small \textbf{Квантни корак}\\
+      Претрага простора стања суперпозицијом
+    \column{0.32\textwidth}
+      \small \textbf{Класични корак}\\
+      Оптимизација параметара кола
+    \column{0.32\textwidth}
+      \small \textbf{Иста матрица $Q$}\\
+      Без додатних трансформација
+  \end{columns}
+
+  \medskip
+  \begin{alertblock}{Практично ограничење (NISQ)}
+    Дубина кола, шум и цена класичне петље ограничавају перформансе.
+    QAOA је данас пре \textbf{концептуални мост} него практичан алат.
+  \end{alertblock}
+\end{frame}
+
+% ============================================================
+\section{Z3 као верификатор QUBO}
+% ============================================================
+
+\begin{frame}{Z3 као верификатор QUBO формулација}
+  \textbf{Три корака верификације:}
+
+  \bigskip
+  \begin{enumerate}
+    \item \textbf{Семантика казненог члана}\\
+          Z3 доказује: $P_j(\mathbf{x})=0 \iff C_j(\mathbf{x})$ важи\\
+          (\texttt{unsat} = нема контрапримера = казна је исправна)
+
+    \bigskip
+    \item \textbf{Довољност коефицијента $\lambda_j$}\\
+          Z3 проверава: постоји ли недозвољено стање са QUBO енергијом
+          $\leq$ оптималном дозвољеном?\\
+          (\texttt{unsat} = $\lambda$ је довољан)
+
+    \bigskip
+    \item \textbf{Верификација кандидатног решења $\hat{\mathbf{x}}$}\\
+          Z3 проверава легалност, израчунава циљну функцију и тражи
+          боље легално решење — \emph{мери квалитет квантног решавача}
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Пример: Провера казненог члана}
+  \textbf{Ограничење:} $x_i + x_j = 1$ \quad (тачно један активан)\\
+  \textbf{Казна:} $P = \lambda(1 - x_i - x_j + 2x_ix_j)$
+
+  \begin{lstlisting}[style=pysmall]
+from z3 import *
+xi, xj, lam = Ints('xi xj lam')
+P = lam * (1 - xi - xj + 2 * xi * xj)
+s = Solver()
+s.add(Or(xi==0, xi==1), Or(xj==0, xj==1), lam > 0)
+# Kontrapimer: dozvoljeno ali P!=0, ili nedozvoljeno ali P<=0
+s.add(Or(And(xi+xj==1, P!=0), And(xi+xj!=1, P<=0)))
+print(s.check())   # unsat  =>  kazna je ispravna
+  \end{lstlisting}
+
+  \medskip
+  \begin{exampleblock}{Резултат \texttt{unsat}}
+    Контрапример не постоји — казнени члан је \textbf{семантички исправан}
+    на свим бинарним вредностима.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Предложени хибридни ток рада}
+  \centering
+  \begin{tikzpicture}[
+    node distance=1.1cm and 0.7cm,
+    box/.style={draw, rounded corners=3pt, thick, align=center,
+                text width=2.1cm, minimum height=0.9cm,
+                font=\small, fill=gray!8},
+    classical/.style={box, fill=blue!10, draw=blue!50!black},
+    qubo/.style={box, fill=orange!15, draw=orange!70!black},
+    quantum/.style={box, fill=red!8, draw=red!60!black},
+    verify/.style={box, fill=green!12, draw=green!45!black},
+    flow/.style={->, thick}
+  ]
+    \node[classical] (orig) {Полазни\\проблем};
+    \node[classical, right=of orig] (smt) {SMT\\модел};
+    \node[qubo, right=of smt] (qubo) {QUBO /\\Изинг};
+    \node[quantum, right=of qubo] (solver) {Квантни\\решавач};
+    \node[verify, below=1.2cm of qubo] (check) {Z3: провера\\решења};
+
+    \draw[flow] (orig) -- (smt);
+    \draw[flow] (smt)  -- node[above,font=\tiny]{верификација} (qubo);
+    \draw[flow] (qubo) -- (solver);
+    \draw[flow] (orig.south) |- (check.west);
+    \draw[flow] (solver.south) |- node[pos=0.3,right,font=\scriptsize]{$\hat{\mathbf{x}}$} (check.east);
+  \end{tikzpicture}
+
+  \bigskip
+  \begin{columns}[T]
+    \column{0.33\textwidth}
+      \small \textcolor{blue!70!black}{\textbf{Корак 1–2}}\\
+      Формулација QUBO + Z3 верификација казни
+    \column{0.33\textwidth}
+      \small \textcolor{orange!80!black}{\textbf{Корак 3–4}}\\
+      Квантни / хеуристички решавач добија $\hat{\mathbf{x}}$
+    \column{0.33\textwidth}
+      \small \textcolor{green!50!black}{\textbf{Корак 5}}\\
+      Z3 потврђује легалност и мери квалитет
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\section{Закључак}
+% ============================================================
+
+\begin{frame}{Кључни закључци}
+  \begin{itemize}
+    \item \textbf{MaxCut је природан мост.}\\
+          Довољноједноставан за SMT моделовање, богат за QUBO и Изингов модел.
+
+    \bigskip
+    \item \textbf{QUBO је заједнички језик.}\\
+          Иста матрица $Q$ ради са Z3, симулираним жарењем, D-Wave-ом и QAOA-ом.
+
+    \bigskip
+    \item \textbf{Z3 је верификатор, не само решавач.}\\
+          Семантика казни, довољност $\lambda$, провера $\hat{\mathbf{x}}$ — три SMT упита.
+
+    \bigskip
+    \item \textbf{Хибридни образац је кључан.}\\
+          Квантни алгоритми претражују; формална верификација осигурава поузданост.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Отворена питања}
+  \begin{itemize}
+    \item \textbf{Систематско превођење SMT → QUBO}\\
+          са формалном гаранцијом коректности
+
+    \bigskip
+    \item \textbf{Аутоматски избор $\lambda$}\\
+          преко SMT оптимизације — довољан, али минималан коефицијент казне
+
+    \bigskip
+    \item \textbf{Хибридни ток рада у пракси}\\
+          квантни / хеуристички генератор решења + Z3 филтер
+
+    \bigskip
+    \item \textbf{Емпиријска поређења на реалним инстанцама}\\
+          када QUBO + квантни решавач надмашује чисто симболичко решавање?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Захвалница}
+  \centering
+  \vspace{1.5cm}
+  {\Large\bfseries Хвала на пажњи!}
+
+  \vspace{1.5cm}
+  \begin{tabular}{rl}
+    \textbf{Аутор:} & Александар Ивановић \\
+    \textbf{Контакт:} & \texttt{aleksandarivanovicmaster@gmail.com} \\
+    \textbf{Семинар:} & Катедра за рачунарство и информатику \\
+    \textbf{Датум:} & 12. април 2026. \\
+  \end{tabular}
+
+  \vspace{1.5cm}
+  \small
+  Коришћена литература: Farhi et al.\ (2014), Glover et al.\ (2022),
+  McGeoch (2014), Johnson et al.\ (2011), Goemans \& Williamson (1995),
+  de Moura \& Bjørner (2008), Kirkpatrick et al.\ (1983)
+\end{frame}
+
+\end{document}

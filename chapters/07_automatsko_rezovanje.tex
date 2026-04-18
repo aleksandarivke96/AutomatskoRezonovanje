@@ -1,47 +1,15 @@
 \section{Квантно рачунарство и аутоматско резоновање}
 \label{sec:ar}
 
-\subsection{Аналогија са Лагранжевим множитељима}
-
-Структура QUBO формулације са казненим члановима подсећа на
-класичну методу \emph{Лагранжевих множитеља} из математичке
-оптимизације. У континуалном случају, проблем
-\[
-  \min_{\mathbf{x}}\; f(\mathbf{x})
-  \quad \text{уз} \quad
-  g_j(\mathbf{x}) = 0,\; j = 1, \dots, m
-\]
-решава се увођењем Лагранжијана:
-\[
-  \mathcal{L}(\mathbf{x}, \boldsymbol{\lambda})
-  = f(\mathbf{x}) + \sum_{j=1}^{m} \lambda_j\, g_j(\mathbf{x}),
-\]
-где су $\lambda_j$ Лагранжеви множитељи. Оптимум се тражи у
-стационарним тачкама $\nabla_{\mathbf{x}} \mathcal{L} = 0$.
-
-QUBO приступ са казненим члановима прати исту идеју, само прилагођену бинарном,
-дискретном домену: уместо линеарних члanova $\lambda_j g_j(\mathbf{x})$
-користе се \emph{квадратне казне} $\lambda_j P_j(\mathbf{x}) \geq 0$
-које су нула ако и само ако је ограничење задовољено:
-\[
-  f_{\mathrm{QUBO}}(\mathbf{x})
-  = f(\mathbf{x}) + \sum_{j=1}^{m} \lambda_j\, P_j(\mathbf{x}),
-  \qquad \mathbf{x} \in \{0,1\}^n.
-\]
-Кључна разлика је у томе што се у Лагранжевој методи $\lambda_j$
-одређују тражењем тачке превоја, а у QUBO приступу бирају
-\emph{унапред} довољно великим да обезбеде да ниједно кршење
-не може бити енергетски повољније од легалног решења.
-
 \subsection{Z3 као верификатор QUBO ограничења}
 
 Кључна слабост QUBO формулације је у томе што су ограничења
-уграђена \emph{индиректно}, преко казнених чланова~\cite{lucas2014,glover2022qubo}.
+уграђена \emph{индиректно}, преко казнених чланова.
 Ако је знак погрешан, ако недостаје један квадратни члан, или ако је
 коефицијент казне сувише мали, минимум енергије више не мора да
 одговара важећем решењу оригиналног проблема.
 Z3 је зато користан не само као решавач, већ и као
-\emph{верификатор исправности саме QUBO трансформације}~\cite{demoura2008,bjorner2014}.
+\emph{верификатор исправности саме QUBO трансформације}.
 
 Нека је оригинални проблем дат у облику
 \[
@@ -112,7 +80,7 @@ print(s.check())  # unsat
 \textbf{2. Провера да је казна довољно велика.}
 Чак и ако је $P_j(\mathbf{x}) = 0$ тачно на дозвољеним стањима,
 коефицијент $\lambda_j$ мора бити довољно велик да ниједно
-недозвољено стање не постане енергетски повољније од исправног решења~\cite{lucas2014,glover2022qubo}.
+недозвољено стање не постане енергетски повољније од исправног решења.
 За мале и средње инстанце Z3 може прво да нађе оптимално дозвољено
 решење $\mathbf{x}^\star$, а затим да провери да ли постоји
 контрапример облика
@@ -122,14 +90,14 @@ print(s.check())  # unsat
 \]
 Ако је ова формула \texttt{unsat}, онда ниједно кршење ограничења
 не може да „пробије" легално решење у QUBO енергији.
-То је формални доказ да је изабрана penalty скала довољна.
+То је формални доказ да је изабрана казнена скала довољна.
 
-\begin{example}[Провера да је penalty коефицијент довољно велик]
+\begin{example}[Провера да је казнени коефицијент довољно велик]
 \begin{lstlisting}[style=python, caption={Z3 provera da penalizacija eliminise nedozvoljena resenja.}]
 from z3 import *
 
-# Original constrained problem:
-# maximize 3*x0 + 2*x1  subject to x0 + x1 <= 1
+# Originalni problem ogranizenja:
+# maksimizuj 3*x0 + 2*x1  sa uslovom x0 + x1 <= 1
 x0, x1 = Ints('x0 x1')
 
 opt = Optimize()
@@ -151,8 +119,7 @@ def violates_feasible_optimum(lam_value):
 
     qubo = -(3 * y0 + 2 * y1) + lam_value * y0 * y1
 
-    # Look for an infeasible assignment that is at least as good
-    # as the best feasible solution
+    # Potrazi nedozvoljeno resenje koje je bar jednako dobro kao i najbolje dozvoljeno
     s.add(y0 + y1 > 1)
     s.add(qubo <= best_energy)
 
@@ -170,13 +137,13 @@ print(violates_feasible_optimum(3))  # unsat
 
 \textbf{3. Верификација резултата квантног решавача.}
 Када QAOA или квантни анилер врате кандидатно решење
-$\hat{\mathbf{x}}$~\cite{farhi2014,preskill2018}, Z3 може независно да провери:
+$\hat{\mathbf{x}}$, Z3 може независно да провери:
 \begin{itemize}[nosep]
   \item да ли $\hat{\mathbf{x}}$ задовољава оригинална ограничења,
   \item колика је вредност оригиналне циљне функције $g(\hat{\mathbf{x}})$,
   \item да ли постоји боље легално решење за исту малу инстанцу.
 \end{itemize}
-Тако Z3 постаје \emph{референтни оракл} за процену квалитета
+Тако Z3 постаје алат за процену квалитета
 квантних и хеуристичких метода: квантни алгоритам тражи ниску
 енергију, а SMT верификатор потврђује да та ниска енергија има
 жељено семантичко значење.
@@ -185,15 +152,15 @@ $\hat{\mathbf{x}}$~\cite{farhi2014,preskill2018}, Z3 може независно
 \begin{lstlisting}[style=python, caption={Z3 provera kandidatnog resenja dobijenog kvantnim ili heuristickim resavacem.}]
 from z3 import *
 
-# Candidate returned by an annealer or QAOA
+# Kandidat koji je vratio aniler ili QAOA
 x_hat = [0, 1, 0]
 weights = [5, 4, 1]
 
-# Original problem: maximize 5*x0 + 4*x1 + x2
-# subject to exactly one variable being 1
+# Originalni problem: maksimizuj 5*x0 + 4*x1 + x2
+# sa ogranicenjem da je tacno jedan od x0, x1, x2 jednak 1
 x = [Int(f'x{i}') for i in range(3)]
 
-# 1) Check whether x_hat is feasible
+# 1) Provera da li je x_hat legalno resenje
 s = Solver()
 for v in x:
     s.add(Or(v == 0, v == 1))
@@ -203,11 +170,11 @@ s.add(Sum(x) == 1)
 
 print(s.check())  # sat
 
-# 2) Evaluate the returned solution
+# 2) Evaluacija ciljne funkcije na x_hat
 hat_value = sum(weights[i] * x_hat[i] for i in range(3))
 print(hat_value)  # 4
 
-# 3) Search for a better feasible solution
+# 3) Pretraga za bolje dozvoljeno resenje
 opt = Optimize()
 for v in x:
     opt.add(Or(v == 0, v == 1))
@@ -232,26 +199,26 @@ if opt.check() == sat:
 \begin{remark}
 У пракси је ово један од најважнијих хибридних образаца:
 QUBO се користи као формат за оптимизацију, а Z3 као формални слој
-који доказује да су penalty чланови коректни, да су коефицијенти
+који доказује да су казнене чланови коректни, да су коефицијенти
 довољни и да добијени битски низ заиста представља важеће решење
 полазног проблема.
 \end{remark}
 
-\subsection{Предлог верификационог ТОКа рада}
+\subsection{Предлог верификационог тока рада}
 
 На основу претходне анализе, предлажемо следећи хибридни ток рада
 у коме SMT/SAT алати служе као верификациони слој на кључним тачкама
-QUBO пипелине:
+QUBO тока рада:
 
 \begin{enumerate}[nosep]
   \item \textbf{Формулација QUBO.}
-        Проблем се кодира у QUBO матрицу $Q$ и penalty чланове $P_j$.
-  \item \textbf{Верификација penalty семантике (Z3 / CVC5).}
+        Проблем се кодира у QUBO матрицу $Q$ и казнене чланове $P_j$.
+  \item \textbf{Верификација казнене семантике (Z3 / CVC5).}
         За сваки $P_j$ аутоматски се доказује да је нула тачно
         на дозвољеним стањима и строго позитиван на кршењима
         (корак~1 из претходне секције).
         Алати попут Z3 или CVC5 могу се покренути аутоматски
-        у оквиру тест-свите.
+        у оквиру процеса тестирања.
   \item \textbf{Верификација скале казне (Z3 / Gurobi).}
         Проверава се да ли је изабрани $\lambda$ довољан да
         ниједно недозвољено стање не подбаци у QUBO енергији
@@ -261,14 +228,14 @@ QUBO пипелине:
   \item \textbf{Квантни / хеуристички решавач.}
         Верификована QUBO матрица предаје се квантном анилеру,
         QAOA колу или симулираном жарењу.
-  \item \textbf{Пост-хок верификација решења (Z3).}
+  \item \textbf{Верификација решења (Z3).}
         Враћени битски низ $\hat{\mathbf{x}}$ проверава се
         против оригиналних ограничења; Z3 истовремено тражи
         боље легално решење и тако мери квалитет апроксимације.
 \end{enumerate}
 
 Овај образац не захтева потпуну формалну верификацију целог квантног
-алгоритма — само три тачно дефинисана SMT упита довољна су да се
+алгоритма. Само три тачно дефинисана SMT упита довољна су да се
 елиминишу најчешћи извори грешке у QUBO пипелини.
 
 \begin{figure}[h]

@@ -6,3 +6,13 @@
 *.out
 *.synctex.gz
 *.toc
+
+# Beamer temp files
+beamer/*.aux
+beamer/*.log
+beamer/*.nav
+beamer/*.out
+beamer/*.snm
+beamer/*.toc
+beamer/*.vrb
+beamer/*.synctex.gz
