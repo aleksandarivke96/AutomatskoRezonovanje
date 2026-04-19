@@ -360,6 +360,47 @@ opt.check()
   \end{columns}
 \end{frame}
 
+\begin{frame}{Лагранжеви множитељи и веза са QUBO}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \textbf{Лагранжева оптимизација}\\[4pt]
+      Минимизовати $f(\mathbf{x})$ уз ограничења $g_j(\mathbf{x}) = 0$:
+      \[
+        \mathcal{L}(\mathbf{x},\boldsymbol{\lambda})
+          = f(\mathbf{x}) + \sum_j \lambda_j\, g_j(\mathbf{x})
+      \]
+      Оптималност: $\nabla_{\mathbf{x}} \mathcal{L} = 0$,\;
+      $\nabla_{\boldsymbol{\lambda}} \mathcal{L} = 0$
+      \medskip
+      \begin{itemize}\small
+        \item $\lambda_j$ се одређује аналитички
+        \item Ради на непрекидном домену $\mathbf{x}\in\mathbb{R}^n$
+        \item Ограничења су \emph{тачно} задовољена у оптимуму
+      \end{itemize}
+    \column{0.48\textwidth}
+      \textbf{QUBO аналогија}\\[4pt]
+      Минимизовати $f(\mathbf{x})$ уз ограничења $C_j(\mathbf{x})$:
+      \[
+        f_{\mathrm{QUBO}}(\mathbf{x})
+          = f(\mathbf{x}) + \sum_j \lambda_j\, P_j(\mathbf{x})
+      \]
+      где $P_j(\mathbf{x}) \geq 0$,\; $P_j=0 \iff C_j$ важи
+      \medskip
+      \begin{itemize}\small
+        \item $\lambda_j$ се бира \emph{унапред} (инжењерски)
+        \item Домен је дискретан: $\mathbf{x}\in\{0,1\}^n$
+        \item Ограничења нису гарантована — управљана казном
+      \end{itemize}
+  \end{columns}
+
+  \bigskip
+  \begin{alertblock}{Кључна разлика}
+    Лагранжеви множитељи оптимизују $\lambda$ заједно са $\mathbf{x}$.
+    У QUBO-у, $\lambda_j$ је фиксни параметар — довољно велики да казни нарушавање,
+    али без градијентне корекције.
+  \end{alertblock}
+\end{frame}
+
 \begin{frame}{Казнени чланови у QUBO}
   Свако ограничење кодира се казном $P(\mathbf{x}) \geq 0$,
   нула само ако ограничење \emph{важи}:

@@ -93,7 +93,7 @@ print(s.check())  # unsat
 То је формални доказ да је изабрана казнена скала довољна.
 
 \begin{example}[Провера да је казнени коефицијент довољно велик]
-\begin{lstlisting}[style=python, caption={Z3 provera da penalizacija eliminise nedozvoljena resenja.}]
+\begin{lstlisting}[style=python, caption={Z3 провера да је казнени коефицијент $\lambda$ довољно велик.}]
 from z3 import *
 
 # Originalni problem ogranizenja:
@@ -149,7 +149,7 @@ $\hat{\mathbf{x}}$, Z3 може независно да провери:
 жељено семантичко значење.
 
 \begin{example}[Верификација кандидатног bitstring-а]
-\begin{lstlisting}[style=python, caption={Z3 provera kandidatnog resenja dobijenog kvantnim ili heuristickim resavacem.}]
+\begin{lstlisting}[style=python, caption={Z3 провера кандидатног решења добијеног квантним или хеуристичким решавачем.}]
 from z3 import *
 
 # Kandidat koji je vratio aniler ili QAOA
